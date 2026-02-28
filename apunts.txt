@@ -1,0 +1,61 @@
+1. Els Components Base (L'esquelet)
+
+A diferència de la web, aquí no uses <div> ni <span>. Uses components natius:
+
+    <View>: El contenidor equivalent al div. S'usa per agrupar i maquetar amb Flexbox.tsx].
+
+    <Text>: L'únic component que pot contenir text. Si poses text fora d'un <Text>, l'app peta.tsx].
+
+    <Image>: Per carregar imatges (locals o de xarxa amb uri).tsx].
+
+    <ScrollView> / <FlatList>:
+
+        ScrollView: Per contingut curt que vols que llisqui.tsx].
+
+        FlatList: Per llistes llargues de dades. És molt més eficient perquè només renderitza el que veus a la pantalla.
+
+2. La Lògica i les Dades (Hooks)
+
+React Native és React, així que la lògica es basa en Hooks:
+
+    useState: Per guardar dades que canvien (com el text d'un cercador).
+
+    useEffect: Per executar codi quan la pantalla es carrega (com una crida a una API).
+
+    Hooks Personalitzats: Com el teu useNoticies, que encapsula la lògica de càrrega i errors per mantenir el component net.tsx].
+
+3. Estils: Flexbox és el Rei
+
+Tots els components de React Native fan servir Flexbox per defecte.
+
+    flex: 1: Fa que el component ocupi tot l'espai disponible.tsx].
+
+    flexDirection: Per defecte és column (un element sota l'altre), a diferència de la web que és row.
+
+    StyleSheet.create: S'utilitza per definir els estils fora del render, millorant el rendiment.tsx].
+
+4. Navegació (Expo Router / Stack)
+
+És com es mou l'usuari entre pantalles:
+
+    _layout.tsx: Defineix l'estructura global (com el Header gris que hem tocat).
+
+    Stack: Una pila de pantalles. Quan obres una notícia, la "poses sobre" la llista.
+
+    useLocalSearchParams: Per agafar l'ID o els paràmetres de la URL (com [id].tsx).tsx].
+
+5. El "Safe Area" (Àrees de Seguretat)
+
+En els mòbils actuals (amb el notch de l'iPhone o barres de gestos), no pots pintar a tot arreu.
+
+    useSafeAreaInsets: Un hook que et diu quants píxels de marge has de deixar a dalt i a baix per no tapar res important.tsx].
+
+    SafeBottom: El component que hem creat per "protegir" la part inferior de la pantalla amb un color de fons.tsx].
+
+Resum de bones pràctiques que hem aplicat:
+
+    Separació de conceptes: L'estil va en un fitxer, la lògica en un Hook i el disseny en el component.
+
+    Gestió d'estats: Sempre has de preveure el loading i el cas de "no trobat" (!noticia).tsx].
+
+    Components reutilitzables: Com el SafeBottom, que el fas servir a totes les pantalles per mantenir la coherència.tsx].

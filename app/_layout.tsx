@@ -1,24 +1,33 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+import { Stack } from "expo-router";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+    return (
+        <Stack
+            screenOptions={{
+                // Propietats globals com el color de la fletxa de tornar enrere
+                headerTintColor: "#fff",
+                headerTitleStyle: {
+                    fontSize: 25,
+                    fontWeight: "bold",
+                },
+            }}
+        >
+            {/* Cambiem 'index' per '(tabs)'. Això carregarà el menú inferior com a pantalla principal. */}
+            <Stack.Screen
+                name="(tabs)"
+                options={{
+                    headerShown: false, // Amaguem el header del Stack perquè cada Tab tindrà el seu
+                }}
+            />
 
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+            {/* Mantenim la teva ruta de detall. Com que esta fora de (tabs), el menú inferior s'amagarà automàticament  */}
+            <Stack.Screen
+                name="noticia/[id]"
+                options={{
+                    title: "",
+                    headerTransparent: true,
+                }}
+            />
+        </Stack>
+    );
 }
