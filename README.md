@@ -1,50 +1,128 @@
-# Welcome to your Expo app 👋
+# Documentació del Projecte: Sistema de Notícies en Temps Real
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+### ** Sense Websockets **
 
-## Get started
+# Desde laravel iniciar API en el servidor i activar apache:
 
-1. Install dependencies
+`php artisan serve --host=0.0.0.0 --port=8000`
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+### ** Amb Websockets **
 
-   ```bash
-   npx expo start
-   ```
+#### # Laravel
 
-In the output, you'll find options to open the app in a
+# Terminal 1 (L'API):
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+`php artisan serve --host=0.0.0.0 --port=8000`
+Això manté l'API funcionant perquè el mòbil pugui carregar les dades inicials.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+# Terminal 2 (El canal de comunicació):
 
-## Get a fresh project
+`php artisan reverb:start --debug`
+El flag --debug és clau: veuràs un missatge cada cop que el mòbil es connecti.
 
-When you're ready, run:
+# Terminal 3 (El missatger):
 
-```bash
-npm run reset-project
+`php artisan queue:listen`
+Laravel processa l'enviament del WebSocket de fons; sense això, el missatge mai sortirà cap al mòbil.
+
+#### # React Native
+
+`npm start`
+
+---
+
+### ** Llibreries instal·lades **
+
+#### # 1. En el costat de Laravel (Servidor)
+
+Laravel actua com l'emissor de dades. Per defecte no ve preparat per a WebSockets "moderns" sense algunes eines extra:
+
+- **Laravel Reverb:** És el servidor de WebSockets oficial de Laravel. S'encarrega de mantenir la connexió oberta amb el mòbil.
+    - **Comanda:** `php artisan install:broadcasting` (Això instal·la Reverb i configura els fitxers necessaris).
+- **Laravel Echo (Servidor):** Tot i que Echo es coneix més en el frontend, a Laravel s'instal·la per gestionar com es "broadcastegen" els esdeveniments cap al canal correcte.
+- **Drivers de Cues (Database/Redis):** Perquè els esdeveniments no alenteixin la web, es fan servir cues. Has hagut de configurar el .env i tenir una taula jobs o un servidor Redis per processar el `queue:listen`.
+
+#### # 2. En el costat de React Native (App Mòbil)
+
+L'aplicació mòbil necessita biblioteques que sàpiguen "escoltar" i gestionar la connexió de xarxa:
+
+- **laravel-echo:** És la llibreria que utilitzes en el codi per subscriure't als canals (com noticies) i escoltar els esdeveniments (NoticiaPublicada).
+    - **Instal·lació:** `npm install laravel-echo`
+- **pusher-js:** És el motor de comunicació real que hi ha sota de Laravel Echo. Reverb utilitza el protocol de Pusher, per tant, aquesta llibreria és imprescindible per establir la connexió física.
+    - **Instal·lació:** `npm install pusher-js`
+- **@react-native-community/netinfo:** Aquesta va ser la peça que et va donar l'error inicial. pusher-js la necessita per saber si el mòbil té connexió a internet. Si no hi és, l'app no pot gestionar les reconnexions automàtiques.
+    - **Instal·lació:** `npx expo install @react-native-community/netinfo`
+
+> **Nota:** Utilitzem dues llibreries: `laravel-echo` (per gestionar la connexió) i `pusher-js` (que és el motor que fa servir Reverb per sota). Mentre que Laravel Reverb és l'emissor, `pusher-js` és l'antena que el mòbil fa servir per captar els senyals.
+
+---
+
+### ** 1. El Costat del Servidor (Laravel) **
+
+L'objectiu era que el servidor "avisés" l'app cada cop que passava alguna cosa, sense que l'app hagués de preguntar.
+
+- **L'Esdeveniment (NoticiaPublicada):** Vam crear aquesta classe per empaquetar la informació de la notícia. Utilitza el NoticiaResource per assegurar que el format de les dades (títol, imatge, data) sigui exactament el mateix que el mòbil ja sap llegir.
+- **El Controlador (NoticiaController.php):** Hem afegit la funció `broadcast(...)->toOthers()`. Això fa que, quan guardes o edites una notícia, Laravel enviï un senyal a través de Reverb.
+- **Laravel Reverb:** És el motor que manté un "tub" (WebSocket) obert amb tots els mòbils connectats per enviar-los missatges a l'instant.
+
+---
+
+### ** 2. El "Cable" (React Native + Laravel Echo) **
+
+Perquè el mòbil pogués rebre aquests avisos, necessitàvem una antena.
+
+- **constants/echo.ts:** Aquí hem configurat Laravel Echo. Li hem dit quina és la teva IP local i quina clau de seguretat fer servir. És el fitxer que estableix la connexió física entre el telèfon i el teu ordinador.
+- **NetInfo:** Vam haver d'instal·lar aquesta llibreria perquè el sistema de WebSockets necessita saber si el mòbil té internet per poder reconnectar-se si entres en un túnel o perds el Wi-Fi.
+
+---
+
+### ** 3. La Intel·ligència de l'App (Hooks i Components) **
+
+Aquí és on passa la màgia visual:
+
+- **El Hook useNoticies.ts:** Aquest és el cervell. Abans només sabia carregar les notícies al principi. Ara té la funció `updateFromSocket`, que rep una notícia nova i la injecta directament a la llista que l'usuari està veient, sense parpellejos ni recàrregues.
+- **El Component LlistaCategoria.tsx:** Hem afegit un `useEffect` que es queda "escoltant" el canal anomenat noticies. Quan arriba un missatge del servidor, aquest component agafa la notícia i li passa al Hook per actualitzar la pantalla.
+
+---
+
+### ** Flux: **
+
+1.  **Laravel Reverb:** El servidor que envia el paquet.
+2.  **Pusher-js:** El motor que transporta el paquet pel Wi-Fi fins al mòbil.
+3.  **Laravel Echo:** El missatger que t'entrega el paquet dins del codi de React Native de forma neta.
+4.  **updateFromSocket:** La teva funció que agafa el paquet i el posa a la pantalla.
+
+---
+
+### ** Recorregut detallat de com arriba la dada: **
+
+#### 1. La "Connexió" (constants/echo.ts)
+
+Abans de rebre res, l'app utilitza la configuració que vas crear a `echo.ts` per obrir un canal de comunicació permanent amb l'adreça IP del teu servidor (per exemple, 192.168.1.140).
+
+#### 2. L' "Escolta" (LlistaCategoria.tsx)
+
+Dins del component, el codi executa aquesta línia que actua com una antena:
+
+- `echo.channel("noticies")`: Se subscriu al canal anomenat "noticies".
+- `.listen("NoticiaPublicada", ...)`: Se queda esperant exactament aquest tipus de missatge.
+
+#### 3. El "Pas de Testimoni" (Cap al Hook)
+
+En el moment que Laravel Reverb envia la notícia, el component la rep i, immediatament, crida a la funció:
+
+```typescript
+// LlistaCategoria.tsx
+channel.listen("NoticiaPublicada", (e: { noticia: Noticia }) => {
+    // Aquí és on la dada entra oficialment a l'app!
+    updateFromSocket(e.noticia);
+});
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+#### 4. L' "Actualització" (useNoticies.ts)
 
-## Learn more
+- Finalment, la informació viatja des del component fins al Hook useNoticies.ts, on la funció updateFromSocket agafa la "notícia fresca" i la barreja amb les que ja tenies a la pantalla perquè l'usuari les vegi.
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Resum: Laravel envia el "crit", el component LlistaCategoria.tsx l'atrapa amb el seu useEffect i el Hook useNoticies.ts el processa per dibuixar-lo a la interfície.
