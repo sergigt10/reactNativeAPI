@@ -1,4 +1,4 @@
-export const API_BASE_URL = "http://192.168.1.140:8000/api";
+export const API_BASE_URL = "http://192.168.1.164:8000/api";
 export const COLORS = {
     primary: "#FF6600",
     background: "#F8F9FA",

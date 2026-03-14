@@ -8,13 +8,13 @@ import { Platform } from "react-native";
 export async function registerForPushNotificationsAsync() {
     let token;
 
-    // 1. Les notificacions push només funcionen en dispositius físics
+    // Les notificacions push només funcionen en dispositius físics
     if (!Device.isDevice) {
         console.log("Cal un dispositiu físic per a les notificacions Push");
         return;
     }
 
-    // 2. Demanar permisos al sistema operatiu
+    // Demanar permisos al sistema operatiu
     const { status: existingStatus } =
         await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
@@ -29,14 +29,14 @@ export async function registerForPushNotificationsAsync() {
         return;
     }
 
-    // 3. Obtenir el Token d'Expo
+    // Obtenir el Token d'Expo
     try {
         const projectId =
             Constants.expoConfig?.extra?.eas?.projectId ??
             Constants.easConfig?.projectId;
 
         if (!projectId) {
-            throw new Error("No s’ha trobat el projectId a app.json");
+            throw new Error("No s'ha trobat el projectId a app.json");
         }
 
         token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;

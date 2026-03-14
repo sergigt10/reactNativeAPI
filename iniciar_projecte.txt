@@ -24,6 +24,9 @@ Laravel processa l'enviament del WebSocket de fons; sense això, el missatge mai
 # React Native #
 npm start
 
+# Instal·lar APP en el mòbil #
+npx expo run:android -d   
+
 ###############################################################################################################################################################################
 
 ** Llibreries instal·lades **
