@@ -41,7 +41,7 @@ export async function registerForPushNotificationsAsync() {
 
         token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
 
-        // 4. Enviar el token al teu Laravel
+        // Enviar el token a Laravel
         await axios.post(`${API_BASE_URL}/push-tokens`, { token });
         console.log("Token registrat a Laravel:", token);
     } catch (e) {

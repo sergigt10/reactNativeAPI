@@ -17,7 +17,7 @@ Notifications.setNotificationHandler({
         }) as Notifications.NotificationBehavior,
 });
 
-// Evitem que el Splash s'amagui automàticament
+// Evitem que Splash s'amagui automàticament
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {

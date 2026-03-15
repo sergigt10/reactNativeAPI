@@ -12,7 +12,7 @@ export const handleSocketUpdate = <T>(
     if (Array.isArray(prevData)) {
         // Busca si ja existeix: Mira si l'ID de la notícia que arriba ja està a la llista.
         const exists = prevData.find((n) => n.id === payload.id);
-        // Si existeix (Edició): Utilitza .map() per recórrer tota la llista.
+        // Si existeix: Utilitza .map() per recórrer tota la llista.
         // Quan troba la notícia vella amb el mateix ID, la canvia pel payload nou. Les altres les deixa igual.
         if (exists) {
             return prevData.map((n) =>
@@ -30,6 +30,7 @@ export const handleSocketUpdate = <T>(
     return prevData;
 };
 
+// Esborra una noticia
 export const handleSocketRemove = <T>(
     prevData: T | null,
     id: number,
